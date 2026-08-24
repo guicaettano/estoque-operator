@@ -1,6 +1,7 @@
 import { TagPlusIntegrationError, type TagPlusOAuthTokenResponse, type TagPlusProductsResponse } from "@/lib/tagplus/types";
 
 export const TAGPLUS_API_BASE_URL = "https://api.tagplus.com.br";
+export const TAGPLUS_AUTHORIZATION_URL = "https://developers.tagplus.com.br/authorize";
 export const TAGPLUS_SCOPE = "read:produtos";
 const TOKEN_EXPIRY_SKEW_MS = 60_000;
 
@@ -19,7 +20,7 @@ export function isValidOAuthState(expected: string, received: string | null): bo
 }
 
 export function buildTagPlusAuthorizationUrl(state: string): string {
-  const url = new URL("/authorize", TAGPLUS_API_BASE_URL);
+  const url = new URL(TAGPLUS_AUTHORIZATION_URL);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", env("TAGPLUS_CLIENT_ID"));
   url.searchParams.set("scope", TAGPLUS_SCOPE);

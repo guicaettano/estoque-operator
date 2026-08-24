@@ -64,7 +64,7 @@ PDFs com texto usam primeiro parsers locais e determinísticos. Quando nenhum la
 
 O OAuth e as rotas existentes continuam preservados. Quando o suporte liberar o acesso, configure `PRODUCT_PROVIDER=tagplus` e mantenha as variáveis `TAGPLUS_*`. O domínio usa a interface `ProductProvider`, portanto a integração externa fica restrita ao adapter `TagPlusProductProvider`; nenhuma regra de entrada precisa ser reescrita.
 
-- `GET https://api.tagplus.com.br/authorize`: Authorization Code, `scope=read:produtos`, `state`.
+- `GET https://developers.tagplus.com.br/authorize`: Authorization Code, `scope=read:produtos`, `state`.
 - `POST https://api.tagplus.com.br/oauth2/token`: troca de código e refresh em `application/x-www-form-urlencoded`.
 - `GET https://api.tagplus.com.br/produtos`: `Authorization: Bearer …` e `X-Api-Version: 2.0`.
 
