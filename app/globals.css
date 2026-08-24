@@ -163,6 +163,7 @@ h1, h2, p { margin-top: 0; }
 .system-card .status-indicator { margin-top: 6px; }
 .system-card strong { display: block; margin-bottom: 3px; font-size: 13px; }
 .system-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.system-card-actions { display: flex; align-items: center; gap: 10px; }
 .status-badge { padding: 5px 9px; border: 1px solid #a7f3d0; border-radius: 999px; background: var(--success-soft); color: #047857; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
 .history-heading { border-bottom: 1px solid var(--line); }
@@ -251,6 +252,7 @@ h1, h2, p { margin-top: 0; }
   .history-row > div:not(:last-child) { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   .action-card { min-height: 210px; }
   .system-card { align-items: flex-start; flex-direction: column; }
+  .system-card-actions { width: 100%; justify-content: space-between; }
 }
 
 @media (prefers-reduced-motion: reduce) {
