@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ProductProviderKind } from "@/lib/catalog/types";
 
 type OperatorHeaderProps = {
-  active?: "home" | "entrada" | "entradas";
+  active?: "home" | "entrada" | "entradas" | "produtos";
   providerKind?: ProductProviderKind;
 };
 
@@ -18,6 +18,7 @@ export function OperatorHeader({ active, providerKind }: OperatorHeaderProps) {
         <Link aria-current={active === "home" ? "page" : undefined} className={active === "home" ? "is-active" : undefined} href="/">Visão geral</Link>
         <Link aria-current={active === "entrada" ? "page" : undefined} className={active === "entrada" ? "is-active" : undefined} href="/entrada">Nova entrada</Link>
         <Link aria-current={active === "entradas" ? "page" : undefined} className={active === "entradas" ? "is-active" : undefined} href="/entradas">Histórico</Link>
+        <Link aria-current={active === "produtos" ? "page" : undefined} className={active === "produtos" ? "is-active" : undefined} href="/produtos">Produtos</Link>
       </nav>
 
       <div className="operator-actions">

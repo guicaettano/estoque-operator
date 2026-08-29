@@ -2,7 +2,8 @@ import { TagPlusIntegrationError, type TagPlusOAuthTokenResponse, type TagPlusPr
 
 export const TAGPLUS_API_BASE_URL = "https://api.tagplus.com.br";
 export const TAGPLUS_AUTHORIZATION_URL = "https://developers.tagplus.com.br/authorize";
-export const TAGPLUS_SCOPE = "read:produtos";
+// TagPlus documents that write scopes also grant read access to the same resource.
+export const TAGPLUS_SCOPE = "write:produtos";
 const TOKEN_EXPIRY_SKEW_MS = 60_000;
 
 function env(name: string): string {

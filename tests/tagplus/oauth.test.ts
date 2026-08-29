@@ -8,10 +8,10 @@ describe("TagPlus OAuth helpers", () => {
     vi.restoreAllMocks();
   });
 
-  it("builds an authorization-code URL with the product read scope", () => {
+  it("builds an authorization-code URL with the product write scope", () => {
     const url = new URL(buildTagPlusAuthorizationUrl("state-value"));
     expect(url.origin + url.pathname).toBe("https://developers.tagplus.com.br/authorize");
-    expect(Object.fromEntries(url.searchParams)).toEqual({ response_type: "code", client_id: "client-id", scope: "read:produtos", state: "state-value" });
+    expect(Object.fromEntries(url.searchParams)).toEqual({ response_type: "code", client_id: "client-id", scope: "write:produtos", state: "state-value" });
   });
 
   it("treats near-expiry tokens as invalid", () => {
