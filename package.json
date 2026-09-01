@@ -9,7 +9,16 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "cci:sync": "tsx --env-file=connectors/cci/.env connectors/cci/src/index.ts",
+    "matching:benchmark": "tsx --env-file=.env.local scripts/benchmark-product-matching.ts",
+    "matching:benchmark-tagplus": "tsx --env-file=.env.local scripts/benchmark-tagplus-matching.ts",
+    "matching:diagnose-osias": "tsx --env-file=.env.local scripts/diagnose-osias-matching.ts",
+    "matching:retrieval-benchmark": "tsx --env-file=.env.local scripts/benchmark-retrieval-osias.ts",
+    "matching:final-pipeline-benchmark": "tsx --env-file=.env.local scripts/benchmark-final-pipeline-osias.ts",
+    "matching:find-product": "tsx --env-file=.env.local scripts/find-product.ts",
+    "matching:label-osias": "tsx --env-file=.env.local scripts/label-osias.ts",
+    "matching:index-embeddings": "tsx --env-file=.env.local scripts/index-product-embeddings.ts",
+    "tagplus:sync-catalog": "tsx --env-file=.env.local scripts/sync-tagplus-catalog.ts",
+    "cci:sync": "npm --prefix connectors/cci run sync",
     "cci:create-token": "tsx --env-file=.env.local scripts/create-cci-connector-token.ts"
   },
   "dependencies": {

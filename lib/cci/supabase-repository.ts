@@ -1,5 +1,6 @@
 import type { ExternalProduct } from "@/lib/cci/types";
 import type { CciCredential, CciSyncRepository } from "@/lib/cci/sync-service";
+import { buildProductSearchText } from "@/lib/product-matching/search-text";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export class SupabaseCciSyncRepository implements CciSyncRepository {
@@ -32,6 +33,7 @@ export class SupabaseCciSyncRepository implements CciSyncRepository {
       location: product.location,
       supplier: product.supplier,
       raw_data: product.rawData ?? null,
+      search_text: buildProductSearchText({ description: product.description, reference: product.reference, supplier: product.supplier, barcode: product.barcode, rawData: product.rawData }),
       synced_at: syncedAt,
     }));
 

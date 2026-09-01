@@ -1,82 +1,46 @@
-# CCI Connector (V0)
+# CCI Connector
 
-Connector local e **estritamente read-only** entre o CCI/Firebird 2.5 e o estoque-operator.
+Pacote independente, local e **estritamente read-only** para sincronizar o catálogo do CCI/Firebird 2.5 com o estoque-operator.
 
 ```text
-CCI / Firebird local -- SELECT (read-only) --> connector TypeScript
-connector TypeScript -- HTTPS + Bearer token --> Next.js Route Handler
-Next.js -- service role no servidor --> Supabase / erp_products
+CCI / Firebird local -- SELECT --> CCI Connector -- HTTPS --> estoque-operator
 ```
 
-O frontend existente continua sendo a única interface. A aplicação hospedada nunca abre o caminho local do banco CCI.
-
-## Proteções da V0
-
-- A consulta Firebird é uma constante que começa com `SELECT` e é validada antes da execução.
-- A transação Firebird usa `readOnly: true` e `READ COMMITTED`.
-- Não há escrita, DDL ou procedure contra o CCI.
-- A conexão é sempre encerrada em `finally`.
-- O token é hasheado com SHA-256 no Supabase e vinculado a uma única loja.
-- A service role fica somente no backend; ela nunca vai para o PC do connector.
-- Os lotes têm no máximo 500 produtos e o upsert é idempotente.
-- Produtos ausentes em um lote não são removidos.
+Ele não contém Next.js, Supabase SDK, TagPlus ou service role. No PC da loja, copie somente esta pasta `connectors/cci`.
 
 ## Requisitos
 
-- Windows no mesmo PC/rede do Firebird 2.5.
-- Node.js 20 ou superior (Node 22 LTS recomendado).
-- Acesso de leitura ao Firebird na porta configurada.
-- Migration `20260828000000_create_cci_connector.sql` aplicada.
+- Windows x86 com Node.js 20 ou superior.
+- Acesso ao Firebird 2.5 e permissão de leitura em `CADASTRODESCRICAO`.
+- Token de connector já criado para a loja no backend.
 
-O driver `node-firebird` é puro JavaScript, não exige `fbclient.dll`, funciona em Windows/Node 20+ e implementa os protocolos 10–13 do Firebird 2.5.
+`node-firebird` é puro JavaScript e não exige `fbclient.dll`; o pacote usa apenas `node-firebird`, `typescript` e os tipos Node para evitar dependências nativas desnecessárias em Windows x86.
 
-## 1. Aplicar a migration
+## Instalação no PC do CCI
 
-Execute `supabase/migrations/20260828000000_create_cci_connector.sql` no Supabase. Ela cria `stores`, `store_members`, `erp_products`, `cci_connector_credentials`, índices e RLS.
+**Não execute `npm ci` na raiz do `estoque-operator` nesse PC.** Ela instala o app Next.js completo e dependências que podem exigir Node mais novo.
 
-Para criar a loja inicial no SQL Editor, troque o UUID do usuário e execute:
-
-```sql
-with new_store as (
-  insert into public.stores (name, created_by)
-  values ('RR Motos', 'UUID_DO_USUARIO_DO_SUPABASE')
-  returning id, created_by
-)
-insert into public.store_members (store_id, user_id, role)
-select id, created_by, 'owner' from new_store
-returning store_id;
-```
-
-Guarde o `store_id` retornado.
-
-## 2. Criar uma credencial da instalação
-
-No computador de desenvolvimento/backend, configure `.env.local`:
-
-```dotenv
-NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=SEU_SEGREDO_SERVER_SIDE
-CCI_STORE_ID=UUID_DA_LOJA
-```
-
-Execute `npm run cci:create-token`. O comando grava apenas o hash e mostra o token uma única vez. Copie-o para o PC do CCI. Não coloque a service role nesse PC.
-
-## 3. Configurar no PC do CCI
-
-Na raiz do repositório, execute:
+Copie a pasta `connectors/cci` para o PC da loja. Em PowerShell:
 
 ```powershell
-npm install
-Copy-Item connectors\cci\.env.example connectors\cci\.env
+cd connectors\cci
+Copy-Item .env.example .env
+notepad .env
+npm ci
+npm run sync
 ```
 
-Preencha `connectors\cci\.env`:
+O comando `npm run sync` compila o TypeScript com `tsc` e executa `node dist/index.js`; não usa `tsx`, `esbuild`, Supabase SDK nem dependências do projeto raiz.
+
+## Configuração
+
+Preencha o arquivo `.env` copiado de `.env.example`:
 
 ```dotenv
 CCI_FIREBIRD_HOST=localhost
 CCI_FIREBIRD_PORT=3050
 CCI_FIREBIRD_DATABASE=C:\RepleisConta\DADOS
-CCI_FIREBIRD_USER=SEU_USUARIO_SOMENTE_LEITURA
+CCI_FIREBIRD_USER=SYSDBA
 CCI_FIREBIRD_PASSWORD=SUA_SENHA
 CCI_FIREBIRD_ENCODING=WIN1252
 CCI_STORE_ID=UUID_DA_LOJA
@@ -86,17 +50,29 @@ CCI_BATCH_SIZE=500
 CCI_REQUEST_TIMEOUT_MS=30000
 ```
 
-O `.env` é ignorado pelo Git. Prefira também um usuário Firebird com somente `SELECT` em `CADASTRODESCRICAO`, criando uma segunda barreira além da transação read-only.
+O `.env` não é enviado ao Git. Nunca coloque `SUPABASE_SERVICE_ROLE_KEY` neste PC.
 
-## 4. Executar
+## Segurança e funcionamento
+
+- Abre uma transação Firebird com `readOnly: true` e `READ COMMITTED`.
+- Executa somente a consulta `SELECT` fixa em `CADASTRODESCRICAO`; a consulta também é validada contra comandos de escrita.
+- Normaliza produtos e envia batches de no máximo 500 itens por `fetch` nativo do Node 20.
+- Usa `Authorization: Bearer <CCI_CONNECTOR_TOKEN>`.
+- Fecha a conexão Firebird mesmo quando ocorre erro.
+- Não executa `UPDATE`, `INSERT`, `DELETE`, DDL ou procedures no CCI.
+
+Para uma defesa adicional, use um usuário Firebird com somente `SELECT` na tabela de produtos.
+
+## Verificação local
+
+Antes do primeiro sync real, você pode validar o pacote sem tocar no Firebird:
 
 ```powershell
-npm run cci:sync
+npm run typecheck
+npm test
 ```
 
-Senha e token nunca são escritos no log.
-
-## 5. Verificar
+Após sincronizar, verifique no Supabase:
 
 ```sql
 select *
@@ -105,14 +81,3 @@ where provider = 'cci'
 order by synced_at desc
 limit 10;
 ```
-
-Executar novamente atualiza a mesma linha por chave externa; não cria duplicatas.
-
-## Limitações e próximos passos
-
-- Execução manual; ainda não é `.exe` nem Windows Service.
-- Sync unidirecional CCI → estoque-operator; nunca escreve no CCI.
-- Não exclui automaticamente produtos ausentes.
-- Não usa IA, embeddings ou vector database.
-- `searchErpProducts` oferece busca textual determinística, sempre isolada por loja.
-- Futuramente, a credencial pode ganhar rotação/expiração e telemetria por instalação.

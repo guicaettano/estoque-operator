@@ -1,4 +1,15 @@
-import type { ExternalProduct } from "../../../lib/cci/types";
+export type ExternalProduct = {
+  externalId: string;
+  description: string;
+  salePrice: number | null;
+  costPrice: number | null;
+  stock: number | null;
+  barcode: string | null;
+  reference: string | null;
+  location: string | null;
+  supplier: string | null;
+  rawData?: Record<string, unknown> | null;
+};
 
 export type CciProductRow = {
   CODIGO: number | string | null;

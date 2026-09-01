@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { SupportedCharacterSet } from "node-firebird";
 
 export type CciConnectorConfig = {
@@ -15,6 +17,25 @@ export type CciConnectorConfig = {
   batchSize: number;
   requestTimeoutMs: number;
 };
+
+export function loadEnvFile(filePath = resolve(process.cwd(), ".env")): void {
+  if (!existsSync(filePath)) throw new Error(`Arquivo .env não encontrado em ${filePath}. Copie .env.example para .env.`);
+
+  for (const rawLine of readFileSync(filePath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const separator = line.indexOf("=");
+    if (separator < 1) throw new Error(`Linha inválida no .env: ${rawLine}`);
+
+    const name = line.slice(0, separator).trim();
+    let value = line.slice(separator + 1).trim();
+    if (!/^[A-Z0-9_]+$/.test(name)) throw new Error(`Nome inválido no .env: ${name}`);
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[name] === undefined) process.env[name] = value;
+  }
+}
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): CciConnectorConfig {
   return {
@@ -51,18 +72,14 @@ function positiveInteger(value: string | undefined, fallback: number, name: stri
 function boundedInteger(value: string | undefined, fallback: number, min: number, max: number, name: string): number {
   if (!value) return fallback;
   const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
-    throw new Error(`${name} deve ser um inteiro entre ${min} e ${max}.`);
-  }
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) throw new Error(`${name} deve ser um inteiro entre ${min} e ${max}.`);
   return parsed;
 }
 
 function validHttpsUrl(value: string): string {
   const url = new URL(value);
   const localDevelopment = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
-  if (url.protocol !== "https:" && !localDevelopment) {
-    throw new Error("CCI_SYNC_URL deve usar HTTPS (HTTP só é aceito em localhost). ");
-  }
+  if (url.protocol !== "https:" && !localDevelopment) throw new Error("CCI_SYNC_URL deve usar HTTPS (HTTP só é aceito em localhost).");
   return url.toString();
 }
 

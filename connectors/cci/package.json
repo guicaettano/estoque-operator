@@ -1,0 +1,22 @@
+{
+  "name": "estoque-operator-cci-connector",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Connector local read-only do CCI Firebird para o estoque-operator",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/connector.test.cjs",
+    "sync": "npm run build && node dist/index.js"
+  },
+  "dependencies": {
+    "node-firebird": "2.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,4 +1,11 @@
-import type { CciSyncSummary, ExternalProduct } from "../../../lib/cci/types";
+import type { ExternalProduct } from "./types";
+
+export type CciSyncSummary = {
+  success: true;
+  received: number;
+  upserted: number;
+  errors: number;
+};
 
 export function chunkProducts<T>(products: readonly T[], batchSize: number): T[][] {
   if (!Number.isInteger(batchSize) || batchSize <= 0) throw new Error("batchSize deve ser um inteiro positivo.");
@@ -37,9 +44,7 @@ export async function syncProductBatches(input: {
     });
 
     const payload: unknown = await response.json().catch(() => null);
-    if (!response.ok || !isSyncSummary(payload)) {
-      throw new Error(readApiError(payload, response.status));
-    }
+    if (!response.ok || !isSyncSummary(payload)) throw new Error(readApiError(payload, response.status));
 
     received += payload.received;
     upserted += payload.upserted;

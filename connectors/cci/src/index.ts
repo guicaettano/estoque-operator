@@ -1,10 +1,11 @@
-import { loadConfig } from "./config";
+import { loadConfig, loadEnvFile } from "./config";
 import { connectToFirebird, readCciProducts } from "./firebird";
 import { normalizeCciProduct } from "./normalize";
 import { syncProductBatches } from "./sync";
 
 async function main() {
   const startedAt = performance.now();
+  loadEnvFile();
   const config = loadConfig();
 
   console.log("CCI Connector\n");
